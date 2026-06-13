@@ -12,9 +12,11 @@ def poisson_log_pmf(k, rate):
     log_p = None
     k = np.asarray(k)
     log_factorial = np.zeros(k.shape)
-    for i in range(len(k)):
-        log_factorial[i] = math.log(math.factorial(int(k.flat[i])))
+    for i in range(k.size):
+        log_factorial.flat[i] = math.log(math.factorial(int(k.flat[i])))
     log_p = k * np.log(rate) - rate - log_factorial
+    if log_p.ndim == 0:
+        log_p = float(log_p)
     return log_p
 
 def poission_analytic_mle(samples):
@@ -29,6 +31,8 @@ def poission_analytic_mle(samples):
 
 def poission_confidence_interval(lambda_mle, n, alpha=0.05):
     """
+
+
     lambda_mle: an MLE for the rate parameter (lambda) in a Poisson distribution
     n: the number of samples used to estimate lambda_mle
     alpha: the significance level for the confidence interval (typically small value like 0.05)
@@ -300,7 +304,7 @@ class MultiNormalClassDistribution():
         features = class_rows[:, :-1]
         self.prior = len(class_rows) / len(dataset)
         self.mean = np.mean(features, axis=0)
-        self.cov = np.cov(features, rowvar=False)
+        self.cov = np.cov(features, rowvar=False, bias=True)
         
         
     def get_prior(self):
@@ -380,8 +384,9 @@ class DiscreteNBClassDistribution():
         self.prior = len(class_rows) / len(dataset)
         self.feature_values = []
         self.probabilities = []
+        all_features = dataset[:, :-1]
         for i in range(features.shape[1]):
-            unique_vals = np.unique(features[:, i])
+            unique_vals = np.unique(all_features[:, i])
             self.feature_values.append(unique_vals)
             probs = {}
             for val in unique_vals:
